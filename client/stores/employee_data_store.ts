@@ -22,31 +22,26 @@ export const useEmployeeData = defineStore('employeeData', {
       this.currentEmployee = this.emp.find((employee) => employee.id === id);
     },
 
-    removeEmployee(id = null) {
+    async removeEmployee(id = null) {
       this.currentEmployee = null;
-
-      this.emp = this.emp.filter((employee) => employee.id !== id);
+      const {status} = await http.delete(`/${id}`);
+      if(status == 204) {
+        await this.populateAllEmployee();
+      }
     },
 
     getSubordinates(id = null) {
       return this.emp.filter((employee) => employee.manager_id === id);
     },
 
-    update(empData) {
+    async update(empData) {
       const { id, first_name, last_name, emailId, bio } = empData;
-
-      const employee = this.emp.find((employee) => employee.id === id);
-      const employeeIdx = this.emp.indexOf(employee);
-
-      this.emp[employeeIdx] = {
-        ...employee,
-        first_name,
-        last_name,
-        emailId,
-        bio,
-      };
-
-      this.currentEmployee = this.emp[employeeIdx];
+      const {status} = await http.put(`/${id}`, {first_name, last_name, emailId, bio});
+      if(status == 200) {
+        const employeeIndex = this.emp.findIndex(e => e.id === id);
+        this.emp[employeeIndex] = {...this.emp[employeeIndex], first_name, last_name, emailId, bio}
+        this.currentEmployee = this.emp[employeeIndex];
+      }
     },
   },
 });
